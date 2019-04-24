@@ -9,19 +9,31 @@ const client = new pg.Client({
   port     : settings.port,
   ssl      : settings.ssl
 });
-async function getData () {
-  try {
+ function getData () {
     // Code that could error out.
-    await client.connect();
-    const result = await client.query(`SELECT * FROM famous_people WHERE first_name = $1::text OR last_name = $1::text`, [process.argv[2]])
-    client.end();
-    return result.rows
-  } catch(err) {
-    console.error('Error: ', err)
-  }
+    // client.connect(() => {
+    //   client.query("whaterver", (result)=> {
+    //     client.query(result, (_) => {
+    //
+    //     })
+    //   })
+    // })
 
-  // console.log(result.rows);
+
+    client.connect()
+    .then(() => {
+      return client.query(`SELECT * FROM famous_people WHERE first_name = $1::text OR last_name = $1::text`, [process.argv[2]])
+    })
+    .then(result => {
+      client.end()
+      return result.rows
+    })
+    .catch(err => {
+      console.error('Error: ', err)
+    })
 }
+// console.log(result.rows);
+
 function outputData(rows) {
   rows.forEach(function(row, index) {
     const firstName = row.first_name
@@ -31,9 +43,8 @@ function outputData(rows) {
     console.log(index+1 + ' ' + firstName + ' ' + lastName + ', ' + 'born' + ' ' + birthDate );
   })
 }
-async function main() {
-  const data = await getData();
-  outputData(data);
+function main() {
+  getData().then(data => outputData(data));
 }
 
 main();
